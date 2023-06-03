@@ -5,6 +5,7 @@ import {
   mockCreateCategoryDto,
   mockCreateCategoryResult,
 } from './category.stub';
+import { NotFoundException } from '@nestjs/common';
 
 describe('Categories Controller', () => {
   let controller: CategoryController;
@@ -49,6 +50,39 @@ describe('Categories Controller', () => {
       const spyCategoryServiceCreate = jest.spyOn(service, 'create');
       controller.createCategoryAction(mockCreateCategoryDto());
       expect(spyCategoryServiceCreate).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Find Category By Id Action', () => {
+    it('find category by id should return anything that returned by category service find method', () => {
+      jest
+        .spyOn(service, 'find')
+        .mockResolvedValueOnce(mockCreateCategoryResult() as any);
+
+      expect(controller.findCategoryById('123')).resolves.toEqual(
+        mockCreateCategoryResult(),
+      );
+    });
+    it('find category by id should return not found exception', () => {
+      jest
+        .spyOn(service, 'find')
+        .mockRejectedValueOnce(
+          new NotFoundException('category is not found ...'),
+        );
+
+      expect(controller.findCategoryById('123')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+    it('category service find should called once', () => {
+      const spyCategoryServiceFind = jest.spyOn(service, 'find');
+      controller.findCategoryById('123');
+      expect(spyCategoryServiceFind).toBeCalledTimes(1);
+    });
+    it('category service should called by correct parameters', () => {
+      const spyCategoryServiceFind = jest.spyOn(service, 'find');
+      controller.findCategoryById('123');
+      expect(spyCategoryServiceFind).toBeCalledWith({ _id: '123' }, true);
     });
   });
 });
