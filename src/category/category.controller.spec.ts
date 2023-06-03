@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
 import {
+  mockCategories,
   mockCreateCategoryDto,
   mockCreateCategoryResult,
 } from './category.stub';
@@ -83,6 +84,22 @@ describe('Categories Controller', () => {
       const spyCategoryServiceFind = jest.spyOn(service, 'find');
       controller.findCategoryById('123');
       expect(spyCategoryServiceFind).toBeCalledWith({ _id: '123' }, true);
+    });
+  });
+
+  describe('Find Categories Action', () => {
+    it('should return anything returned by category service findAll method', () => {
+      jest
+        .spyOn(service, 'findAll')
+        .mockResolvedValueOnce(mockCategories() as any);
+      expect(controller.findCategoriesAction()).resolves.toEqual(
+        mockCategories(),
+      );
+    });
+    it('should call category service findAll Method one time', () => {
+      const spyCategoryServiceFind = jest.spyOn(service, 'findAll');
+      controller.findCategoriesAction();
+      expect(spyCategoryServiceFind).toBeCalledTimes(1);
     });
   });
 });
