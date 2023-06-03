@@ -17,7 +17,7 @@ export class CategoryService {
   async create(dto: CreateCategoryDTO) {
     const duplicatedCategory = await this.find({ name: dto.name });
     if (duplicatedCategory) {
-      // throw new ConflictException('category duplicated by name');
+      throw new ConflictException('category duplicated by name');
     }
     return this.categoryModel.create({ name: dto.name });
   }
