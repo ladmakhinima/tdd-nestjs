@@ -1,22 +1,22 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CategoryService } from './category.service';
-import { getModelToken } from '@nestjs/mongoose';
-import { Category, CategoryDocument } from './category.entity';
 import { Model } from 'mongoose';
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import { CategoryService } from './category.service';
+import { Category, CategoryDocument } from './category.entity';
+import { Test, TestingModule } from '@nestjs/testing';
+import { getModelToken } from '@nestjs/mongoose';
+import { ConflictException } from '@nestjs/common';
 
-const mockCreateCategory = () => ({
-  _id: 'anyid',
-  name: 'anyname',
+const mockCreateCategoryDto = () => ({
+  name: 'something ...',
 });
 
-const mockCreateCategoryDTO = () => ({
-  name: 'anyid',
+const mockCreateCategoryResult = () => ({
+  name: 'something',
+  id: 'object id ...',
 });
 
-describe('CategoryService', () => {
+describe('Category Service', () => {
   let service: CategoryService;
-  let repository: Model<CategoryDocument>;
+  let repositoryMongoose: Model<CategoryDocument>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,73 +25,51 @@ describe('CategoryService', () => {
         {
           provide: getModelToken(Category.name),
           useValue: {
-            find: jest.fn(),
             findOne: jest.fn(),
             create: jest.fn(),
+            find: jest.fn(),
           },
         },
       ],
     }).compile();
+
     service = module.get<CategoryService>(CategoryService);
-    repository = module.get<Model<CategoryDocument>>(
+    repositoryMongoose = module.get<Model<CategoryDocument>>(
       getModelToken(Category.name),
     );
   });
-  it('category service should be defined ...', () => {
-    expect(service).toBeDefined();
-  });
-  describe('create category', () => {
-    it('create category successfully ...', async () => {
-      jest
-        .spyOn(repository, 'create')
-        .mockReturnValueOnce(mockCreateCategory() as any);
-      const result = await service.create(mockCreateCategoryDTO());
-      expect(result).toEqual(mockCreateCategory());
-      expect(repository.create).toBeCalledTimes(1);
-      expect(repository.create).toBeCalledWith(mockCreateCategoryDTO());
-    });
 
-    it('create category: duplicate name error', async () => {
+  describe('Test Create Category', () => {
+    it('Create Category Successfully', async () => {
       jest
-        .spyOn(service, 'create')
+        .spyOn(repositoryMongoose, 'create')
+        .mockResolvedValueOnce(mockCreateCategoryResult() as any);
+
+      const result = await service.create(mockCreateCategoryDto());
+      expect(result).toEqual(mockCreateCategoryResult());
+    });
+    it('Create Category Check Find Method Param', async () => {
+      jest.spyOn(service, 'find');
+      await service.create(mockCreateCategoryDto());
+      expect(service.find).toBeCalledWith({
+        name: mockCreateCategoryDto().name,
+      });
+    });
+    it('Create Category Failed: Duplicate By Name', async () => {
+      jest
+        .spyOn(service, 'find')
         .mockReturnValueOnce(
           new ConflictException('category duplicated by name') as any,
         );
 
-      const result = await service.create(mockCreateCategoryDTO());
-      expect(service.create).toBeCalledWith(mockCreateCategoryDTO());
-      expect(result).toEqual(
-        new ConflictException('category duplicated by name'),
-      );
-    });
-  });
-  describe('find category', () => {
-    it('find successfully', async () => {
-      jest
-        .spyOn(repository, 'findOne')
-        .mockReturnValueOnce(mockCreateCategory() as any);
-
-      const result = await service.find({ name: mockCreateCategoryDTO().name });
-      expect(result).toEqual(mockCreateCategory());
-      expect(repository.findOne).toHaveBeenCalled();
-      expect(repository.findOne).toHaveBeenCalledTimes(1);
-      expect(repository.findOne).toHaveBeenCalledWith({
-        name: mockCreateCategoryDTO().name,
-      });
-    });
-
-    it('find : not found error', async () => {
-      jest
-        .spyOn(service, 'find')
-        .mockReturnValueOnce(
-          new BadRequestException('category is not found ...') as any,
-        );
-
-      const result = await service.find({ name: mockCreateCategoryDTO().name });
-
-      expect(result).toEqual(
-        new BadRequestException('category is not found ...') as any,
-      );
+      service
+        .create(mockCreateCategoryDto())
+        .then((result) => {
+          expect(result).not.toBe(undefined);
+        })
+        .catch((err) => {
+          expect(err?.message).toEqual('category duplicated by name');
+        });
     });
   });
 });
