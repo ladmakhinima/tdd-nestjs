@@ -40,7 +40,7 @@ describe('Category Service', () => {
   });
 
   describe('Test Create Category', () => {
-    it('Create Category Successfully', async () => {
+    it('category should be created successfully', async () => {
       jest
         .spyOn(repositoryMongoose, 'create')
         .mockResolvedValueOnce(mockCreateCategoryResult() as any);
@@ -48,14 +48,14 @@ describe('Category Service', () => {
       const result = await service.create(mockCreateCategoryDto());
       expect(result).toEqual(mockCreateCategoryResult());
     });
-    it('Create Category Check Find Method Param', async () => {
+    it('category find method should called with correct parameters', async () => {
       jest.spyOn(service, 'find');
       await service.create(mockCreateCategoryDto());
       expect(service.find).toBeCalledWith({
         name: mockCreateCategoryDto().name,
       });
     });
-    it('Create Category Failed: Duplicate By Name', async () => {
+    it('category should throw error with exception', async () => {
       jest
         .spyOn(service, 'find')
         .mockReturnValueOnce(
