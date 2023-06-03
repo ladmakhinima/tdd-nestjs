@@ -3,16 +3,12 @@ import { CategoryService } from './category.service';
 import { Category, CategoryDocument } from './category.entity';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
-import { ConflictException } from '@nestjs/common';
-
-const mockCreateCategoryDto = () => ({
-  name: 'something ...',
-});
-
-const mockCreateCategoryResult = () => ({
-  name: 'something',
-  id: 'object id ...',
-});
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  mockCreateCategoryDto,
+  mockCreateCategoryResult,
+  mockCategories,
+} from './category.stub';
 
 describe('Category Service', () => {
   let service: CategoryService;
@@ -65,6 +61,60 @@ describe('Category Service', () => {
       expect(service.create(mockCreateCategoryDto())).rejects.toBeInstanceOf(
         ConflictException,
       );
+    });
+  });
+
+  describe('Test FindAll Category', () => {
+    it('find all category result should be equal with mongoose find method', () => {
+      jest
+        .spyOn(repositoryMongoose, 'find')
+        .mockResolvedValueOnce(mockCategories());
+      expect(service.findAll()).resolves.toEqual(mockCategories());
+    });
+
+    it('find method in mongoose should called once', () => {
+      const spyFindAll = jest.spyOn(repositoryMongoose, 'find');
+      service.findAll();
+      expect(spyFindAll).toBeCalledTimes(1);
+    });
+  });
+
+  describe('Test Find Category', () => {
+    it('find method should return anything that returned by categoryModel findone', () => {
+      jest
+        .spyOn(repositoryMongoose, 'findOne')
+        .mockResolvedValueOnce(mockCreateCategoryResult());
+      expect(
+        service.find({ name: mockCreateCategoryDto().name }),
+      ).resolves.toEqual(mockCreateCategoryResult());
+    });
+
+    it('find method should return notfound exception when no category found and throwNotFoundError param Become true', () => {
+      jest
+        .spyOn(repositoryMongoose, 'findOne')
+        .mockResolvedValueOnce(undefined);
+      expect(service.find({ name: 'anything' }, true)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+    it('find method should not return notfound exception when no category found and not passed any param as throwNotFoundError', () => {
+      jest
+        .spyOn(repositoryMongoose, 'findOne')
+        .mockResolvedValueOnce(undefined);
+      expect(service.find({ name: 'anything' })).resolves.toEqual(undefined);
+    });
+    it('when find method called, the findOne should called once', () => {
+      const spyFindOneMongooseRepo = jest.spyOn(repositoryMongoose, 'findOne');
+      service.find({ name: mockCreateCategoryDto().name }).then(() => {
+        expect(spyFindOneMongooseRepo).toBeCalledTimes(1);
+      });
+    });
+    it('when find method called, the findOne should called with correct param', async () => {
+      const spyFindOneMongooseRepo = jest.spyOn(repositoryMongoose, 'findOne');
+      service.find({ name: mockCreateCategoryDto().name });
+      expect(spyFindOneMongooseRepo).toHaveBeenCalledWith({
+        name: mockCreateCategoryDto().name,
+      });
     });
   });
 });
