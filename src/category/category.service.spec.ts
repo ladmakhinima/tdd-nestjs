@@ -49,9 +49,9 @@ describe('Category Service', () => {
       expect(result).toEqual(mockCreateCategoryResult());
     });
     it('category find method should called with correct parameters', async () => {
-      jest.spyOn(service, 'find');
+      const spyFindCategory = jest.spyOn(service, 'find');
       await service.create(mockCreateCategoryDto());
-      expect(service.find).toBeCalledWith({
+      expect(spyFindCategory).toBeCalledWith({
         name: mockCreateCategoryDto().name,
       });
     });
@@ -61,15 +61,11 @@ describe('Category Service', () => {
         .mockReturnValueOnce(
           new ConflictException('category duplicated by name') as any,
         );
-
-      service
-        .create(mockCreateCategoryDto())
-        .then((result) => {
-          expect(result).not.toBe(undefined);
-        })
-        .catch((err) => {
-          expect(err?.message).toEqual('category duplicated by name');
-        });
+      try {
+        await service.create(mockCreateCategoryDto());
+      } catch (error) {
+        expect(error).toBeInstanceOf(ConflictException);
+      }
     });
   });
 });
