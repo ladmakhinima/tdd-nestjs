@@ -1,31 +1,24 @@
 import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
+import {
+  MaterialSupplier,
+  MaterialSupplierSchema,
+} from './material-supplier.entity';
 
 export type MaterialDocument = HydratedDocument<Material>;
 
 @Schema()
 export class Material {
+  _id: string;
+
   @Prop({ name: 'name', type: String, required: true })
   name: string;
 
   @Prop({ name: 'category', type: String, required: true })
   category: string;
 
-  @Prop([
-    raw({
-      name: {
-        type: String,
-        name: 'fullName',
-        required: true,
-      },
-      basePrice: {
-        type: Number,
-        name: 'basePrice',
-        required: true,
-      },
-    }),
-  ])
-  suppliers: Record<string, number>[];
+  @Prop({ name: 'suppliers', required: true, type: [MaterialSupplierSchema] })
+  suppliers: MaterialSupplier[];
 
   @Prop(
     raw({

@@ -2,10 +2,22 @@ import {
   IsArray,
   IsInt,
   IsNotEmpty,
+  IsNumber,
   IsString,
   MinLength,
   ValidateNested,
 } from 'class-validator';
+
+export class CreateMaterialSupplierDTO {
+  @IsNotEmpty()
+  @IsString()
+  @MinLength(3)
+  fullName: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  basePrice: number;
+}
 
 export class CreateMaterialDTO {
   @IsNotEmpty()
@@ -20,13 +32,12 @@ export class CreateMaterialDTO {
   @IsNotEmpty()
   @IsArray()
   @ValidateNested({ each: true })
-  suppliers: Record<string, number>[];
+  suppliers: CreateMaterialSupplierDTO[];
 
   @IsNotEmpty()
   @IsInt()
   stock: number;
 
   @IsNotEmpty()
-  @MinLength(3, { each: true })
   unitOfMeasurement: Record<string, string>;
 }

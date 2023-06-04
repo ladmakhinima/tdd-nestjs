@@ -9,6 +9,7 @@ const bootstrap = async () => {
   const port = configService.get<number>('APP_CONFIG_PORT');
 
   app.useGlobalPipes(new ValidationPipe());
+  app.setGlobalPrefix('/api');
   app.listen(port, async () => {
     console.log(`The server running : ${await app.getUrl()}`);
   });
