@@ -9,6 +9,7 @@ import {
   mockCreateCategoryResult,
   mockCategories,
 } from './category.stub';
+import { EventService } from '../common/event/event.service';
 
 describe('Category Service', () => {
   let service: CategoryService;
@@ -16,6 +17,7 @@ describe('Category Service', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [],
       providers: [
         CategoryService,
         {
@@ -24,6 +26,12 @@ describe('Category Service', () => {
             findOne: jest.fn(),
             create: jest.fn(),
             find: jest.fn(),
+          },
+        },
+        {
+          provide: EventService,
+          useValue: {
+            emit: jest.fn(),
           },
         },
       ],

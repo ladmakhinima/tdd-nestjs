@@ -87,4 +87,21 @@ export class MaterialService {
   findAllMaterials() {
     return this.materialModel.find();
   }
+
+  async updateAllCategoriesOfMaterial(
+    oldCategory: string,
+    newCategory: string,
+  ) {
+    const materials = await this.materialModel.find({ category: oldCategory });
+    if (materials.length === 0) {
+      throw new BadRequestException(
+        'not found any materials with these categories ...',
+      );
+    }
+    return await this.materialModel.updateMany(
+      { _id: materials.map((e) => e.id) },
+      { $set: { category: newCategory } },
+      { new: true },
+    );
+  }
 }

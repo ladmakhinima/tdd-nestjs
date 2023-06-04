@@ -1,17 +1,24 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Category, CategoryDocument } from './category.entity';
 import { Model } from 'mongoose';
-import { CreateCategoryDTO } from './dtos';
+import { CreateCategoryDTO, UpdateCategoryDTO } from './dtos';
+import { SendUpdatedCategoryEvent } from './decorators';
+import { EventService } from '../common/event/event.service';
 
 @Injectable()
 export class CategoryService {
+  
+
   constructor(
-    @InjectModel(Category.name) private readonly categoryModel: Model<CategoryDocument>,
+    @InjectModel(Category.name)
+    private readonly categoryModel: Model<CategoryDocument>,
+    public readonly eventEmitter: EventService
   ) {}
 
   async create(dto: CreateCategoryDTO) {
@@ -32,5 +39,16 @@ export class CategoryService {
 
   findAll() {
     return this.categoryModel.find();
+  }
+
+  @SendUpdatedCategoryEvent()
+  async updateName(_id: string, dto: UpdateCategoryDTO) {
+    const category = await this.find({ _id }, true);
+    await this.categoryModel.updateOne({ _id }, { $set: { name: dto.name } });
+    return {
+      oldCategory: category.name,
+      newCategory: dto.name,
+      _id,
+    };
   }
 }
